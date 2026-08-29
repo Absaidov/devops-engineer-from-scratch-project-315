@@ -1,0 +1,32 @@
+# Системные файлы и конфигурации
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+inventory/
+inventory
+*inventory*
+
+# Логи и временные файлы
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Настройки редакторов и IDE
+.idea/
+.vscode/
+*.suo
+*.ntvsml
+*.njsproj
+*.sln
+*.swd
+.settings/
+.project
+.classpath
