@@ -1,0 +1,86 @@
+---
+- name: Ensure the Yandex Container Registry key is provided
+  ansible.builtin.assert:
+    that:
+      - vault_yc_registry_key is defined
+      - vault_yc_registry_key | trim | length > 0
+    fail_msg: >-
+      Define vault_yc_registry_key in the encrypted
+      group_vars/app/vault.yml file.
+  no_log: true
+
+- name: Ensure an immutable image tag is used
+  ansible.builtin.assert:
+    that:
+      - deploy_image_tag is match('^[0-9a-f]{40}$')
+    fail_msg: >-
+      deploy_image_tag must be a full 40-character Git commit SHA.
+      Mutable tags such as latest are not allowed.
+
+- name: Log in to Yandex Container Registry
+  community.docker.docker_login:
+    registry_url: "{{ deploy_registry_url }}"
+    username: "{{ deploy_registry_username }}"
+    password: "{{ vault_yc_registry_key }}"
+    reauthorize: true
+  no_log: true
+
+- name: Pull the application image
+  community.docker.docker_image_pull:
+    name: "{{ deploy_image }}"
+    pull: always
+  register: deploy_image_pull_result
+
+- name: Create persistent application directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ deploy_data_dir }}"
+    - "{{ deploy_log_dir }}"
+    - "{{ deploy_config_dir }}"
+
+- name: Install the application logging configuration
+  ansible.builtin.copy:
+    src: logback-spring.xml
+    dest: "{{ deploy_config_dir }}/logback-spring.xml"
+    owner: root
+    group: root
+    mode: "0644"
+  register: deploy_log_config_result
+
+- name: Start or update the application container
+  community.docker.docker_container:
+    name: "{{ deploy_container_name }}"
+    image: "{{ deploy_image }}"
+    state: started
+    recreate: >-
+      {{
+        deploy_image_pull_result.changed
+        or deploy_log_config_result.changed
+      }}
+    detach: true
+    restart_policy: unless-stopped
+    stop_timeout: "{{ deploy_container_stop_timeout }}"
+    published_ports: "{{ deploy_container_published_ports }}"
+    volumes: "{{ deploy_container_volumes }}"
+    env: >-
+      {{
+        deploy_container_environment
+        | combine(deploy_managed_environment)
+      }}
+
+- name: Wait for the application to become ready
+  ansible.builtin.uri:
+    url: "{{ deploy_readiness_url }}"
+    method: GET
+    status_code: 200
+    timeout: 5
+  register: deploy_readiness_check
+  until: (deploy_readiness_check.status | default(0)) == 200
+  retries: "{{ deploy_readiness_retries }}"
+  delay: "{{ deploy_readiness_delay }}"
+  changed_when: false

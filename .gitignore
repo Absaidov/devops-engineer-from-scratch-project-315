@@ -30,3 +30,9 @@ inventory
 .settings/
 .project
 .classpath
+
+# Локальные ключи и пароли Ansible Vault
+.vault_pass
+*.vault-pass
+authorized-key.json
+key.json
