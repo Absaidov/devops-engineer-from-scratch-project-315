@@ -4,3 +4,6 @@ deploy_registry_username: json_key
 deploy_image_repository: cr.yandex/crphrkv4imihhuukiv7q/project-devops-deploy
 deploy_image_tag: a100ed36995989034cee26c2cfd9e1558201bdaa
 deploy_image: "{{ deploy_image_repository }}:{{ deploy_image_tag }}"
+deploy_s3_bucket: uit14-bulletins-images
+deploy_s3_region: ru-central1
+deploy_s3_endpoint: https://storage.yandexcloud.net

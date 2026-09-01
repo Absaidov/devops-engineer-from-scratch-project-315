@@ -9,6 +9,11 @@ deploy_managed_environment:
   SPRING_DATASOURCE_USERNAME: "{{ vault_db_username }}"
   SPRING_DATASOURCE_PASSWORD: "{{ vault_db_password }}"
   SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+  STORAGE_S3_BUCKET: "{{ deploy_s3_bucket }}"
+  STORAGE_S3_REGION: "{{ deploy_s3_region }}"
+  STORAGE_S3_ENDPOINT: "{{ deploy_s3_endpoint }}"
+  STORAGE_S3_ACCESSKEY: "{{ vault_s3_access_key }}"
+  STORAGE_S3_SECRETKEY: "{{ vault_s3_secret_key }}"
 deploy_container_published_ports:
   - "80:8080"
   - "127.0.0.1:9090:9090"

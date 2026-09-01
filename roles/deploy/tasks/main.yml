@@ -10,9 +10,13 @@
       - vault_db_username | trim | length > 0
       - vault_db_password is defined
       - vault_db_password | trim | length > 0
+      - vault_s3_access_key is defined
+      - vault_s3_access_key | trim | length > 0
+      - vault_s3_secret_key is defined
+      - vault_s3_secret_key | trim | length > 0
     fail_msg: >-
-      Define the registry key and database connection variables in the
-      encrypted group_vars/app/vault.yml file.
+      Define the registry key, database connection variables, and S3 access
+      keys in the encrypted group_vars/app/vault.yml file.
   no_log: true
 
 - name: Ensure an immutable image tag is used
