@@ -1,12 +1,18 @@
 ---
-- name: Ensure the Yandex Container Registry key is provided
+- name: Ensure deployment secrets are provided
   ansible.builtin.assert:
     that:
       - vault_yc_registry_key is defined
       - vault_yc_registry_key | trim | length > 0
+      - vault_db_url is defined
+      - vault_db_url | trim | length > 0
+      - vault_db_username is defined
+      - vault_db_username | trim | length > 0
+      - vault_db_password is defined
+      - vault_db_password | trim | length > 0
     fail_msg: >-
-      Define vault_yc_registry_key in the encrypted
-      group_vars/app/vault.yml file.
+      Define the registry key and database connection variables in the
+      encrypted group_vars/app/vault.yml file.
   no_log: true
 
 - name: Ensure an immutable image tag is used
@@ -42,6 +48,33 @@
     - "{{ deploy_data_dir }}"
     - "{{ deploy_log_dir }}"
     - "{{ deploy_config_dir }}"
+    - "{{ deploy_migration_dir }}"
+
+- name: Install database migrations
+  ansible.builtin.copy:
+    src: migrations/
+    dest: "{{ deploy_migration_dir }}/"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Apply database migrations
+  community.docker.docker_container:
+    name: "{{ deploy_migration_container_name }}"
+    image: "{{ deploy_migration_image }}"
+    command: migrate
+    state: started
+    recreate: true
+    pull: missing
+    detach: false
+    cleanup: true
+    volumes:
+      - "{{ deploy_migration_dir }}:/flyway/sql:ro"
+    env:
+      FLYWAY_URL: "{{ vault_db_url }}"
+      FLYWAY_USER: "{{ vault_db_username }}"
+      FLYWAY_PASSWORD: "{{ vault_db_password }}"
+  no_log: true
 
 - name: Install the application logging configuration
   ansible.builtin.copy:
@@ -72,6 +105,9 @@
         deploy_container_environment
         | combine(deploy_managed_environment)
       }}
+    comparisons:
+      env: strict
+  no_log: true
 
 - name: Wait for the application to become ready
   ansible.builtin.uri:

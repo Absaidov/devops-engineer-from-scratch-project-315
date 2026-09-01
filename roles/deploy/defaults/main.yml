@@ -5,6 +5,10 @@ deploy_container_name: project-devops-deploy
 deploy_container_environment: {}
 deploy_managed_environment:
   LOGGING_CONFIG: /app/config/logback-spring.xml
+  SPRING_DATASOURCE_URL: "{{ vault_db_url }}"
+  SPRING_DATASOURCE_USERNAME: "{{ vault_db_username }}"
+  SPRING_DATASOURCE_PASSWORD: "{{ vault_db_password }}"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: validate
 deploy_container_published_ports:
   - "80:8080"
   - "127.0.0.1:9090:9090"
@@ -12,6 +16,9 @@ deploy_base_dir: /srv/project-devops-deploy
 deploy_data_dir: "{{ deploy_base_dir }}/data"
 deploy_log_dir: "{{ deploy_base_dir }}/logs"
 deploy_config_dir: /etc/project-devops-deploy
+deploy_migration_dir: "{{ deploy_config_dir }}/migrations"
+deploy_migration_container_name: "{{ deploy_container_name }}-migration"
+deploy_migration_image: flyway/flyway:13.4.0-alpine
 deploy_container_volumes:
   - "{{ deploy_data_dir }}:/tmp/bulletin-images"
   - "{{ deploy_log_dir }}:/var/log/project-devops-deploy"

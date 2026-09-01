@@ -7,3 +7,8 @@ vault_yc_registry_key: |-
     "service_account_id": "replace-with-service-account-id",
     "private_key": "replace-with-private-key"
   }
+
+# Encrypt the real values with ansible-vault before adding them to vault.yml.
+vault_db_url: jdbc:postgresql://database-host:6432/bulletins
+vault_db_username: replace-with-database-user
+vault_db_password: replace-with-database-password
