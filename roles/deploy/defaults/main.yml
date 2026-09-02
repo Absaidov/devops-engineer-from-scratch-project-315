@@ -15,7 +15,7 @@ deploy_managed_environment:
   STORAGE_S3_ACCESSKEY: "{{ vault_s3_access_key }}"
   STORAGE_S3_SECRETKEY: "{{ vault_s3_secret_key }}"
 deploy_container_published_ports:
-  - "80:8080"
+  - "127.0.0.1:8080:8080"
   - "127.0.0.1:9090:9090"
 deploy_base_dir: /srv/project-devops-deploy
 deploy_data_dir: "{{ deploy_base_dir }}/data"

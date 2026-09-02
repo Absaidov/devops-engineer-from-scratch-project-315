@@ -5,3 +5,18 @@
 
   roles:
     - role: deploy
+    - role: geerlingguy.nginx
+
+  post_tasks:
+    - name: Apply pending Nginx configuration changes
+      ansible.builtin.meta: flush_handlers
+
+    - name: Verify the Nginx reverse proxy
+      ansible.builtin.uri:
+        url: http://127.0.0.1/
+        method: GET
+        headers:
+          Host: uit14.ru
+        status_code: 200
+        timeout: 5
+      changed_when: false
