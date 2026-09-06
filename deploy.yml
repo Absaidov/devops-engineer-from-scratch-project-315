@@ -10,14 +10,15 @@
 
     - name: Check whether the TLS certificate already exists
       ansible.builtin.stat:
-        path: /etc/letsencrypt/live/uit14.ru/fullchain.pem
+        path: "/etc/letsencrypt/live/{{ deploy_domain }}/fullchain.pem"
       register: tls_certificate
 
     - name: Configure Nginx for the initial certificate request
       ansible.builtin.include_role:
         name: geerlingguy.nginx
       vars:
-        nginx_vhosts: "{{ nginx_bootstrap_vhosts }}"
+        nginx_vhosts: "{{ nginx_application_vhosts }}"
+        nginx_tls_enabled: false
       when: not tls_certificate.stat.exists
 
     - name: Apply the initial Nginx configuration
@@ -52,17 +53,18 @@
       ansible.builtin.include_role:
         name: geerlingguy.nginx
       vars:
-        nginx_vhosts: "{{ nginx_https_vhosts }}"
+        nginx_vhosts: "{{ nginx_application_vhosts }}"
+        nginx_tls_enabled: true
 
     - name: Apply pending Nginx configuration changes
       ansible.builtin.meta: flush_handlers
 
     - name: Verify the HTTP to HTTPS redirect
       ansible.builtin.uri:
-        url: http://127.0.0.1/
+        url: "http://{{ deploy_bind_address }}:{{ nginx_http_port }}/"
         method: GET
         headers:
-          Host: uit14.ru
+          Host: "{{ deploy_domain }}"
         follow_redirects: none
         status_code: 301
         timeout: 5
@@ -70,10 +72,10 @@
 
     - name: Verify the HTTPS reverse proxy
       ansible.builtin.uri:
-        url: https://127.0.0.1/
+        url: "https://{{ deploy_bind_address }}:{{ nginx_https_port }}/"
         method: GET
         headers:
-          Host: uit14.ru
+          Host: "{{ deploy_domain }}"
         validate_certs: false
         status_code: 200
         timeout: 5
